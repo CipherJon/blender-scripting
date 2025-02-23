@@ -11,11 +11,13 @@ def tetrahedron_points(r=1, origin=(0, 0, 0)):
     origin = Vector(origin)
 
     # Formulas from http://mathworld.wolfram.com/RegularTetrahedron.html
-    a = 4*r/sqrt(6)
-    points = [( sqrt(3)*a/3,  0, -r/3), \
-              (-sqrt(3)*a/6, -0.5*a, -r/3), \
-              (-sqrt(3)*a/6,  0.5*a, -r/3), \
-              (0, 0, sqrt(6)*a/3 - r/3)]
+    a = 4 * r / sqrt(6)
+    points = [
+        (sqrt(3) * a / 3, 0, -r / 3),
+        (-sqrt(3) * a / 6, -0.5 * a, -r / 3),
+        (-sqrt(3) * a / 6, 0.5 * a, -r / 3),
+        (0, 0, sqrt(6) * a / 3 - r / 3)
+    ]
 
     points = [Vector(p) + origin for p in points]
     return points
@@ -26,14 +28,14 @@ def recursive_tetrahedron(bm, points, level=0):
     for i in range(len(points)):
         p0 = points[i]
         pK = points[:i] + points[i + 1:]
-        sub_tetras.append([p0] + [(p0 + p)/2 for p in pK])
+        sub_tetras.append([p0] + [(p0 + p) / 2 for p in pK])
 
-    if 0 < level:
-        for subTetra in sub_tetras:
-            recursive_tetrahedron(bm, subTetra, level-1)
+    if level > 0:
+        for sub_tetra in sub_tetras:
+            recursive_tetrahedron(bm, sub_tetra, level - 1)
     else:
-        for subTetra in sub_tetras:
-            verts = [bm.verts.new(p) for p in subTetra]
+        for sub_tetra in sub_tetras:
+            verts = [bm.verts.new(p) for p in sub_tetra]
             faces = [bm.faces.new(face) for face in it.combinations(verts, 3)]
             bmesh.ops.recalc_face_normals(bm, faces=faces)
 
@@ -42,7 +44,7 @@ if __name__ == '__main__':
     # Remove all elements
     utils.remove_all()
 
-    # Creata fractal tetrahedron
+    # Create a fractal tetrahedron
     bm = bmesh.new()
     tetrahedron_base_points = tetrahedron_points(5)
     recursive_tetrahedron(bm, tetrahedron_base_points, level=4)
@@ -64,8 +66,9 @@ if __name__ == '__main__':
     palette = [utils.colorRGB_256(color) for color in palette]  # Adjust color to Blender
 
     # Set background color of scene
-    bpy.context.scene.world.node_tree.nodes["Background"] \
-        .inputs[0].default_value = palette[0]
+    bpy.context.scene.world.use_nodes = True
+    bg = bpy.context.scene.world.node_tree.nodes["Background"]
+    bg.inputs[0].default_value = palette[0]
 
     # Set material for object
     mat = utils.create_material(palette[1])

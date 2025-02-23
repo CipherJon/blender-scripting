@@ -1,4 +1,4 @@
-#frame files
+# Frame files
 scripts/frames/
 scripts/rendering/
 
@@ -66,6 +66,13 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+
+# Blender specific
+*.blend1
+*.blend2
+*.blend@
+*.blend#
+*.blend~
 
 # PyBuilder
 target/

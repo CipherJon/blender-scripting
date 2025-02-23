@@ -19,4 +19,10 @@ os.chdir(cwd)
 
 # Compile and execute script file
 file = os.path.join(cwd, scriptFile)
-exec(compile(open(file).read(), scriptFile, 'exec'))
+try:
+    with open(file) as f:
+        exec(compile(f.read(), scriptFile, 'exec'))
+except FileNotFoundError:
+    print(f"Error: The script file '{scriptFile}' was not found.")
+except Exception as e:
+    print(f"Error executing the script '{scriptFile}': {e}")

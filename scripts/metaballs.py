@@ -4,7 +4,7 @@ from mathutils import Vector
 import utils
 
 
-def createMetaball(origin=(0, 0, 0), n=30, r0=4, r1=2.5):
+def create_metaball(origin=(0, 0, 0), n=30, r0=4, r1=2.5):
     metaball = bpy.data.metaballs.new('MetaBall')
     obj = bpy.data.objects.new('MetaBallObject', metaball)
     bpy.context.collection.objects.link(obj)
@@ -12,8 +12,8 @@ def createMetaball(origin=(0, 0, 0), n=30, r0=4, r1=2.5):
     metaball.resolution = 0.2
     metaball.render_resolution = 0.05
 
-    for i in range(n):
-        location = Vector(origin) + Vector(random.uniform(-r0, r0) for i in range(3))
+    for _ in range(n):
+        location = Vector(origin) + Vector(random.uniform(-r0, r0) for _ in range(3))
 
         element = metaball.elements.new()
         element.co = location
@@ -31,13 +31,13 @@ if __name__ == '__main__':
     camera = utils.create_camera((-10, -10, 10), target)
 
     # Create lights
-    utils.rainbowLights(10, 100, 3, energy=100)
+    utils.rainbow_lights(10, 100, 3, energy=100)
 
     # Create metaball
-    obj = createMetaball()
+    obj = create_metaball()
     
     # Create material
-    mat = utils.create_material(metalic=0.5)
+    mat = utils.create_material(metallic=0.5)
     obj.data.materials.append(mat)
 
     # Render scene

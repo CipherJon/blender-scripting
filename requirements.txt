@@ -1,0 +1,4 @@
+#requirements needed for this project
+numpy
+scipy
+scikit-learn

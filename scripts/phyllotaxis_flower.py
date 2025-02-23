@@ -5,18 +5,18 @@ from mathutils import Vector, Matrix
 from math import sqrt, pi, sin, cos
 import utils
 
-TAU = 2*pi
+TAU = 2 * pi
 # https://en.wikipedia.org/wiki/Golden_angle
-GOLDEN_ANGLE = pi*(3 - sqrt(5))
+GOLDEN_ANGLE = pi * (3 - sqrt(5))
 
 
 # Get a frame of a vector (tangent, normal and binormal vectors)
 # https://en.wikipedia.org/wiki/Frenet%E2%80%93Serret_formulas
-def getTNBfromVector(v):
+def get_TNB_from_vector(v):
     v = Vector(v)
     N = v.normalized()
-    B = N.cross((0, 0, -1))
-    if(B.length == 0):
+    B = N.cross(Vector((0, 0, -1)))
+    if B.length == 0:
         B, T = Vector((1, 0, 0)), Vector((0, 1, 0))
     else:
         B.normalize()
@@ -25,7 +25,7 @@ def getTNBfromVector(v):
     return T, N, B
 
 
-class PhyllotaxisFlower():
+class PhyllotaxisFlower:
     def __init__(self, scene):
         self.n, self.m = 40, 30
         self.r0, self.r1, self.r2 = 10, 2, 2
@@ -34,7 +34,8 @@ class PhyllotaxisFlower():
 
         # Calculate and compensate for angle offset for infinite animation
         self.offset = (self.frames * GOLDEN_ANGLE) % TAU
-        if self.offset > pi: self.offset -= TAU
+        if self.offset > pi:
+            self.offset -= TAU
 
         # Create object
         mesh = bpy.data.meshes.new('PhyllotaxisFlower')
@@ -52,12 +53,13 @@ class PhyllotaxisFlower():
         # Append new frame change handler to redraw geometry for each frame
         bpy.app.handlers.frame_change_pre.append(self.__frame_change_handler)
 
-
-    def __frame_change_handler(self, scene, value):
+    def __frame_change_handler(self, scene):
         frame = scene.frame_current
         # Constrain to frame range
-        if(frame < 1): frame = 1
-        if(frame >= self.frames): frame = self.frames + 1
+        if frame < 1:
+            frame = 1
+        if frame >= self.frames:
+            frame = self.frames + 1
 
         mesh = self.obj.data
         bm = self.geometry(frame - 1)
@@ -65,44 +67,48 @@ class PhyllotaxisFlower():
         mesh.update()
         bm.free()
 
-
     def geometry(self, frame=0):
         t = frame / self.frames
-        Rot = Matrix.Rotation(0.5*pi, 4, 'Y')
+        Rot = Matrix.Rotation(0.5 * pi, 4, 'Y')
         bm = bmesh.new()
 
         for i in range(self.n):
             t0 = i / self.n
-            r0, theta = t0*self.r0, i*GOLDEN_ANGLE - frame*GOLDEN_ANGLE + t*self.offset
+            r0, theta = t0 * self.r0, i * GOLDEN_ANGLE - frame * GOLDEN_ANGLE + t * self.offset
 
-            x = r0*cos(theta)
-            y = r0*sin(theta)
-            z = self.h0/2 - (self.h0 / (self.r0*self.r0))*r0*r0
+            x = r0 * cos(theta)
+            y = r0 * sin(theta)
+            z = self.h0 / 2 - (self.h0 / (self.r0 * self.r0)) * r0 * r0
             p0 = Vector((x, y, z))
 
-            T0, N0, B0 = getTNBfromVector(p0)
+            T0, N0, B0 = get_TNB_from_vector(p0)
             M0 = Matrix([T0, B0, N0]).to_4x4().transposed()
 
             for j in range(self.m):
                 t1 = j / self.m
-                t2 = 0.4 + 0.6*t0
-                r1, theta = t2*t1*self.r1, j*GOLDEN_ANGLE #- frame*goldenAngle + t*self.offset
+                t2 = 0.4 + 0.6 * t0
+                r1, theta = t2 * t1 * self.r1, j * GOLDEN_ANGLE
 
-                x = r1*cos(theta)
-                y = r1*sin(theta)
-                z = self.h1 - (self.h1 / (self.r1*self.r1))*r1*r1
+                x = r1 * cos(theta)
+                y = r1 * sin(theta)
+                z = self.h1 - (self.h1 / (self.r1 * self.r1)) * r1 * r1
                 p1 = Vector((x, y, z))
-                T1, N1, B1 = getTNBfromVector(p1)
+                T1, N1, B1 = get_TNB_from_vector(p1)
                 M1 = Matrix([T1, B1, N1]).to_4x4().transposed()
 
                 p = p0 + (M0 @ p1)
-                r2 = t2*t1*self.r2
+                r2 = t2 * t1 * self.r2
 
                 T = Matrix.Translation(p)
-                bmesh.ops.create_cone(bm,
-                    cap_ends=True, segments=6,
-                    diameter1=r2, diameter2=r2,
-                    depth=0.1*r2, matrix=T @ M0 @ M1 @ Rot)
+                bmesh.ops.create_cone(
+                    bm,
+                    cap_ends=True,
+                    segments=6,
+                    diameter1=r2,
+                    diameter2=r2,
+                    depth=0.1 * r2,
+                    matrix=T @ M0 @ M1 @ Rot
+                )
         return bm
 
 
@@ -111,7 +117,7 @@ if __name__ == '__main__':
     bpy.ops.object.select_all(action="SELECT")
     bpy.ops.object.delete(use_global=False)
 
-    # Creata phyllotaxis flower
+    # Create phyllotaxis flower
     flower = PhyllotaxisFlower(bpy.context.scene)
 
     # Create camera and lamp
@@ -120,10 +126,9 @@ if __name__ == '__main__':
     sun = utils.create_light((-5, 5, 10), 'SUN', target=target)
 
     # Select colors
-    palette = [(3,101,100), (205,179,128)]
+    palette = [(3, 101, 100), (205, 179, 128)]
     # Convert color and apply gamma correction
-    palette = [tuple(pow(float(c)/255, 2.2) for c in color)
-                for color in palette]
+    palette = [tuple(pow(float(c) / 255, 2.2) for c in color) for color in palette]
 
     # Smooth surface and add subsurf modifier
     utils.set_smooth(flower.obj, 2)
@@ -141,4 +146,5 @@ if __name__ == '__main__':
         'frames_02', 'phyllotaxis_flower', 512, 512,
         render_engine='CYCLES',
         animation=True,
-        frame_end=50)
+        frame_end=50
+    )

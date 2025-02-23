@@ -2,18 +2,18 @@ import bpy
 import colorsys
 from math import sin, cos, pi
 from mathutils import Euler
-TAU = 2*pi
+
+TAU = 2 * pi
 
 
 def rainbow_lights(r=5, n=100, freq=2, energy=100):
     for i in range(n):
-        t = float(i)/float(n)
-        pos = (r*sin(TAU*t), r*cos(TAU*t), r*sin(freq*TAU*t))
+        t = float(i) / float(n)
+        pos = (r * sin(TAU * t), r * cos(TAU * t), r * sin(freq * TAU * t))
 
         # Create lamp
-        bpy.ops.object.add(type='LIGHT', location=pos)
+        bpy.ops.object.light_add(type='POINT', location=pos)
         obj = bpy.context.object
-        obj.data.type = 'POINT'
 
         # Apply gamma correction for Blender
         color = tuple(pow(c, 2.2) for c in colorsys.hsv_to_rgb(t, 0.6, 1))
@@ -32,11 +32,11 @@ if __name__ == '__main__':
     bpy.context.scene.cursor.location = (0, 0, 0)
 
     # Create camera
-    bpy.ops.object.add(type='CAMERA', location=(0, -3.0, 0))
+    bpy.ops.object.camera_add(location=(0, -3.0, 0))
     camera = bpy.context.object
     camera.data.lens = 35
-    camera.rotation_euler = Euler((pi/2, 0, 0), 'XYZ')
-    
+    camera.rotation_euler = Euler((pi / 2, 0, 0), 'XYZ')
+
     # Make this the current camera
     bpy.context.scene.camera = camera
 
@@ -45,16 +45,16 @@ if __name__ == '__main__':
 
     # Create object
     bpy.ops.mesh.primitive_ico_sphere_add(
-        location=(0,0,0),
+        location=(0, 0, 0),
         subdivisions=3,
         radius=1)
     obj = bpy.context.object
-    
+
     # Add subsurf modifier
     modifier = obj.modifiers.new('Subsurf', 'SUBSURF')
     modifier.levels = 2
     modifier.render_levels = 2
-    
+
     # Smooth surface
     for p in obj.data.polygons:
         p.use_smooth = True
@@ -62,10 +62,11 @@ if __name__ == '__main__':
     # Add Glossy BSDF material
     mat = bpy.data.materials.new('Material')
     mat.use_nodes = True
-    node = mat.node_tree.nodes[0]
+    node = mat.node_tree.nodes.new(type='ShaderNodeBsdfGlossy')
     node.inputs[0].default_value = (0.8, 0.8, 0.8, 1)  # Base color
-    node.inputs[4].default_value = 0.5  # Metalic
-    node.inputs[7].default_value = 0.5  # Roughness
+    node.inputs[1].default_value = 0.5  # Roughness
+    output = mat.node_tree.nodes.get('Material Output')
+    mat.node_tree.links.new(node.outputs[0], output.inputs[0])
     obj.data.materials.append(mat)
 
     # Render image
@@ -74,6 +75,5 @@ if __name__ == '__main__':
     scene.render.resolution_y = 512
     scene.render.resolution_percentage = 100
     scene.render.engine = 'CYCLES'
-    #scene.render.engine = 'BLENDER_EEVEE'
     scene.render.filepath = 'rendering/simple_sphere.png'
     bpy.ops.render.render(write_still=True)

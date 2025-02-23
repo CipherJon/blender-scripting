@@ -3,7 +3,6 @@ from math import pi, sin, cos
 import utils
 import os
 
-
 if __name__ == '__main__':
     # Remove all elements
     utils.remove_all()
@@ -27,19 +26,18 @@ if __name__ == '__main__':
     bpy.context.scene.collection.objects.link(empty)
 
     # Animate empty with keyframe animation
-    # keyframe approach adapted from: http://blenderscripting.blogspot.co.at/2011/05/inspired-by-post-on-ba-it-just-so.html
-    for frame in range(1, num_frames):
+    for frame in range(1, num_frames + 1):
         t = frame / num_frames
-        x = 0.7*cos(2*pi*t) + 1
-        y = 0.7*sin(2*pi*t)
-        z = 0.4*sin(2*pi*t)
+        x = 0.7 * cos(2 * pi * t) + 1
+        y = 0.7 * sin(2 * pi * t)
+        z = 0.4 * sin(2 * pi * t)
         empty.location = (x, y, z)
         empty.keyframe_insert(data_path="location", index=-1, frame=frame)
 
     # Change each created keyframe point to linear interpolation
-    #for fcurve in empty.animation_data.action.fcurves:
-    #    for keyframe in fcurve.keyframe_points:
-    #        keyframe.interpolation = 'LINEAR'
+    for fcurve in empty.animation_data.action.fcurves:
+        for keyframe in fcurve.keyframe_points:
+            keyframe.interpolation = 'LINEAR'
 
     # Apply subsurf modifier
     subsurf = obj.modifiers.new('Subsurf', 'SUBSURF')
@@ -61,16 +59,14 @@ if __name__ == '__main__':
     displace.strength = 0.6
 
     # Use some colors
-    palette = [(131,175,155,255), (250,105,10,255)]
+    palette = [(131, 175, 155, 255), (250, 105, 10, 255)]
     # Convert color and apply gamma correction
-    palette = [tuple(pow(float(c)/255.0, 2.2) for c in color)
+    palette = [tuple(pow(float(c) / 255.0, 2.2) for c in color)
                for color in palette]
-    
+
     # Set background color of scene
     bpy.context.scene.world.use_nodes = False
     bpy.context.scene.world.color = palette[0][:3]
-    #bpy.context.scene.world.node_tree.nodes["Background"] \
-    #    .inputs[0].default_value = palette[0]
 
     # Create material for the object
     mat = bpy.data.materials.new('BumpMapMaterial')
@@ -87,11 +83,11 @@ if __name__ == '__main__':
     bump_texture_node.inputs['Scale'].default_value = 20.0
     bump_texture_node.inputs['Detail'].default_value = 4.0
     bump_texture_node.inputs['Roughness'].default_value = 5.0
-    
+
     # Add bump node
     bump_node = mat.node_tree.nodes.new('ShaderNodeBump')
     bump_node.inputs['Strength'].default_value = 0.4
-    
+
     # Link nodes
     mat.node_tree.links.new(
         bump_node.inputs['Height'], bump_texture_node.outputs[0])
@@ -103,6 +99,6 @@ if __name__ == '__main__':
 
     # Render scene
     utils.render('frames_01', 'rugged_donut', 512, 512,
-        animation=True,
-        render_engine='BLENDER_EEVEE',
-        frame_end=num_frames)
+                 animation=True,
+                 render_engine='BLENDER_EEVEE',
+                 frame_end=num_frames)

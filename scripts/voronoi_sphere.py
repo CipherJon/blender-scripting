@@ -6,13 +6,14 @@ from mathutils import Vector, Matrix
 import utils
 
 
-def VoronoiSphere(bm, points, r=2, offset=0.02, num_materials=1):
+def voronoi_sphere(bm, points, r=2, offset=0.02, num_materials=1):
     # Calculate 3D Voronoi diagram
     vor = spatial.Voronoi(points)
 
     faces_dict = {}
     for (idx_p0, idx_p1), ridge_vertices in zip(vor.ridge_points, vor.ridge_vertices):
-        if -1 in ridge_vertices: continue
+        if -1 in ridge_vertices:
+            continue
         if idx_p0 not in faces_dict:
             faces_dict[idx_p0] = []
         if idx_p1 not in faces_dict:
@@ -24,7 +25,8 @@ def VoronoiSphere(bm, points, r=2, offset=0.02, num_materials=1):
     for idx_point in faces_dict:
         region = faces_dict[idx_point]
         center = Vector(vor.points[idx_point])
-        if len(region) <= 1: continue
+        if len(region) <= 1:
+            continue
 
         # Skip all Voronoi regions outside of radius r
         skip = False
@@ -36,21 +38,21 @@ def VoronoiSphere(bm, points, r=2, offset=0.02, num_materials=1):
                     break
 
         if not skip:
-            vertsDict = {}
+            verts_dict = {}
             material_index = np.random.randint(num_materials)
 
             for faces in region:
                 verts = []
                 for idx in faces:
                     p = Vector(vor.vertices[idx])
-                    if idx not in vertsDict:
+                    if idx not in verts_dict:
                         v = center - p
                         v.normalize()
-                        vert = bm.verts.new(p + offset*v)
+                        vert = bm.verts.new(p + offset * v)
                         verts.append(vert)
-                        vertsDict[idx] = vert
+                        verts_dict[idx] = vert
                     else:
-                        verts.append(vertsDict[idx])
+                        verts.append(verts_dict[idx])
 
                 face = bm.faces.new(verts)
                 face.material_index = material_index
@@ -79,9 +81,9 @@ if __name__ == '__main__':
 
     # Create Voronoi Sphere
     n, r = 2000, 2
-    points = (np.random.random((n, 3)) - 0.5)*2*r
+    points = (np.random.random((n, 3)) - 0.5) * 2 * r
     bm = bmesh.new()
-    VoronoiSphere(bm, points, r, num_materials=len(palette)-1)
+    voronoi_sphere(bm, points, r, num_materials=len(palette) - 1)
     obj = utils.bmesh_to_object(bm)
 
     # Apply materials to object
